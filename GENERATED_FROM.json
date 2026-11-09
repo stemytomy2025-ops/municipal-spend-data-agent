@@ -1,0 +1,11 @@
+{
+  "generated_at": "2026-11-09T20:14:09.544900+00:00",
+  "datasets": {
+    "umea-spend-cube-2025": "052dd63124d86f94eabd1e478c2f01ddcc6ff8579082ab8288b88bf4c4949918",
+    "umea-invoices-2025-09": "ad442f76a29400792567e60b3f2fd6fd2a06e0995886839837bee6aaa98e5eb8"
+  },
+  "customised_after_generation": [
+    "app_config.json: audience-facing tagline, 'About this project' tab (docs/about.md), developer tabs hidden",
+    "README.md and docs/data_sources.md: client view note, deployment section and wording for a public audience"
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "cases": [
+    {
+      "id": "spend_by_account-top",
+      "question": "Which account had the highest total spend in Teknisk n\u00e4mnd in 2025?",
+      "tool": "spend_by_account",
+      "args": {
+        "metric": "belopp",
+        "agg": "sum",
+        "filters": {
+          "forvaltning": "Teknisk n\u00e4mnd"
+        }
+      },
+      "expect": {
+        "kind": "top_group",
+        "value": "Entreprenad byggnader"
+      }
+    },
+    {
+      "id": "spend_by_supplier-top",
+      "question": "Which supplier received the most food (Livsmedel) spend in 2025?",
+      "tool": "spend_by_supplier",
+      "args": {
+        "metric": "belopp",
+        "agg": "sum",
+        "filters": {
+          "konto_text": "Livsmedel"
+        }
+      },
+      "expect": {
+        "kind": "top_group",
+        "value": "Martin & Servera Restauranghandel"
+      }
+    },
+    {
+      "id": "spend_by_department-top",
+      "question": "Which department spent the most on food (Livsmedel) in 2025?",
+      "tool": "spend_by_department",
+      "args": {
+        "metric": "belopp",
+        "agg": "sum",
+        "filters": {
+          "konto_text": "Livsmedel"
+        }
+      },
+      "expect": {
+        "kind": "top_group",
+        "value": "Teknisk n\u00e4mnd"
+      }
+    },
+    {
+      "id": "spend_by_month-top",
+      "question": "In which month of 2025 was rent (Lokalhyra) spend highest?",
+      "tool": "spend_by_month",
+      "args": {
+        "metric": "belopp",
+        "agg": "sum",
+        "filters": {
+          "konto_text": "Lokalhyra"
+        }
+      },
+      "expect": {
+        "kind": "top_group",
+        "value": 202512
+      }
+    },
+    {
+      "id": "invoice_size_by_account-top",
+      "question": "Which account has the highest median invoice line in \u00c4ldren\u00e4mnd in September 2025?",
+      "tool": "invoice_size_by_account",
+      "args": {
+        "metric": "belopp",
+        "agg": "median",
+        "filters": {
+          "forvaltning": "\u00c4ldren\u00e4mnd"
+        }
+      },
+      "expect": {
+        "kind": "top_group",
+        "value": "Bidr till stat o statliga"
+      }
+    },
+    {
+      "id": "find_invoice_lines-count",
+      "question": "How many food (Livsmedel) invoice lines are there in September 2025?",
+      "tool": "find_invoice_lines",
+      "args": {
+        "filters": {
+          "konto_text": "Livsmedel"
+        }
+      },
+      "expect": {
+        "kind": "matched_count",
+        "value": 7631
+      }
+    }
+  ],
+  "pinned": {
+    "at": "2026-11-09T20:21:25.280971+00:00",
+    "by": "scripts/pin_expectations.py (pyarrow + plain Python, independent of the tools)",
+    "source_sha256": {
+      "umea-spend-cube-2025": [
+        "052dd63124d86f94eabd1e478c2f01ddcc6ff8579082ab8288b88bf4c4949918"
+      ],
+      "umea-invoices-2025-09": [
+        "ad442f76a29400792567e60b3f2fd6fd2a06e0995886839837bee6aaa98e5eb8"
+      ]
+    }
+  }
+}

@@ -1,0 +1,222 @@
+{
+  "title": "Spend Benchmark Agent",
+  "tagline": "Ask plain-English questions about Umeå kommun's 2025 supplier invoices: 383,902 invoice lines, about SEK 5.9 billion, by department, supplier, account and month. Every number is computed by a tool on the real data, never guessed, and you can see each calculation.",
+  "model": "claude-opus-5-5",
+  "effort": "medium",
+  "max_turns": 6,
+  "max_tool_calls": 8,
+  "use_refusal_fallback": true,
+  "is_test_fixture": false,
+  "datasets": [
+    {
+      "id": "umea-spend-cube-2025",
+      "name": "Umeå kommun supplier invoices 2025, monthly spend by department, supplier and account",
+      "landing_page": "https://opendata.umea.se/explore/dataset/leverantorsfakturor-2025/information/",
+      "license": "CC0 (licence field in the opendata.umea.se catalog metadata)",
+      "attribution": "Umeå kommun supplier invoices 2025, monthly spend by department, supplier and account, https://opendata.umea.se/explore/dataset/leverantorsfakturor-2025/information/ (licence: CC0 (licence field in the opendata.umea.se catalog metadata))",
+      "source": {
+        "kind": "http_csv",
+        "url": "https://opendata.umea.se/api/explore/v2.1/catalog/datasets/leverantorsfakturor-2025/exports/csv?delimiter=%2C&select=datum,forvaltning,leverantor,konto_text,sum(belopp)%20as%20belopp,count(*)%20as%20antal_rader&group_by=datum,forvaltning,leverantor,konto_text",
+        "max_mb": 300
+      },
+      "expected_schema": {
+        "datum": "integer",
+        "forvaltning": "string",
+        "leverantor": "string",
+        "konto_text": "string",
+        "belopp": "float",
+        "antal_rader": "integer"
+      },
+      "expected_min_rows": 45000,
+      "limitations": [
+        "Automated inspection: Snapshot inspected 2026-11-09; the source may change after this date.",
+        "Automated inspection: Profiling stopped at 50000 rows.",
+        "Server-side aggregation of the 383,902 invoice lines of 2025 (catalog record count) by month, department, supplier and account text; belopp is the summed amount in SEK excluding VAT, antal_rader the number of invoice lines.",
+        "Some supplier names are masked with asterisks; the catalog description of an earlier year says some data is hidden under GDPR.",
+        "datum is the posting month as an integer YYYYMM, not a date."
+      ]
+    },
+    {
+      "id": "umea-invoices-2025-09",
+      "name": "Umeå kommun supplier invoice lines, September 2025",
+      "landing_page": "https://opendata.umea.se/explore/dataset/leverantorsfakturor-2025/information/",
+      "license": "CC0 (licence field in the opendata.umea.se catalog metadata)",
+      "attribution": "Umeå kommun supplier invoice lines, September 2025, https://opendata.umea.se/explore/dataset/leverantorsfakturor-2025/information/ (licence: CC0 (licence field in the opendata.umea.se catalog metadata))",
+      "source": {
+        "kind": "http_csv",
+        "url": "https://opendata.umea.se/api/explore/v2.1/catalog/datasets/leverantorsfakturor-2025/exports/csv?delimiter=%2C&where=datum%3D%22202509%22",
+        "max_mb": 300
+      },
+      "expected_schema": {
+        "datum": "integer",
+        "forvaltning": "string",
+        "verifikationsnummer": "integer",
+        "leverantor": "string",
+        "konto_text": "string",
+        "belopp": "float"
+      },
+      "expected_min_rows": 30000,
+      "limitations": [
+        "Automated inspection: Snapshot inspected 2026-11-09; the source may change after this date.",
+        "One month only (September 2025): invoice-level figures say nothing about other months.",
+        "Some supplier names are masked with asterisks; the catalog description of an earlier year says some data is hidden under GDPR."
+      ]
+    }
+  ],
+  "tools": [
+    {
+      "name": "spend_by_account",
+      "description": "Rank account categories (konto_text) by spend or invoice-line count, optionally within one department, month or supplier. Data: Umeå kommun supplier invoices 2025 summed per month (datum, YYYYMM), department (forvaltning), supplier (leverantor) and account text (konto_text). belopp is SEK excluding VAT; antal_rader is the number of invoice lines. Use agg='sum' for totals: 'mean' and 'median' describe month-department-supplier-account cells, not invoices. The 'rows' in the result are cells, so sum antal_rader to count invoice lines.",
+      "operation": "aggregate",
+      "dataset_id": "umea-spend-cube-2025",
+      "params": {
+        "group": "konto_text",
+        "metrics": [
+          "belopp",
+          "antal_rader"
+        ],
+        "filterable": [
+          "forvaltning",
+          "datum",
+          "leverantor"
+        ],
+        "eval_filters": {
+          "forvaltning": "Teknisk nämnd"
+        },
+        "eval_args": {
+          "agg": "sum"
+        },
+        "eval_question": "Which account had the highest total spend in Teknisk nämnd in 2025?"
+      }
+    },
+    {
+      "name": "spend_by_supplier",
+      "description": "Rank suppliers (leverantor) by spend or invoice-line count, optionally within one account, department or month. Returns the top 50; use it to find exact supplier names and to measure supplier concentration in an account. Data: Umeå kommun supplier invoices 2025 summed per month (datum, YYYYMM), department (forvaltning), supplier (leverantor) and account text (konto_text). belopp is SEK excluding VAT; antal_rader is the number of invoice lines. Use agg='sum' for totals: 'mean' and 'median' describe month-department-supplier-account cells, not invoices. The 'rows' in the result are cells, so sum antal_rader to count invoice lines.",
+      "operation": "aggregate",
+      "dataset_id": "umea-spend-cube-2025",
+      "params": {
+        "group": "leverantor",
+        "metrics": [
+          "belopp",
+          "antal_rader"
+        ],
+        "filterable": [
+          "konto_text",
+          "forvaltning",
+          "datum"
+        ],
+        "eval_filters": {
+          "konto_text": "Livsmedel"
+        },
+        "eval_args": {
+          "agg": "sum"
+        },
+        "eval_question": "Which supplier received the most food (Livsmedel) spend in 2025?"
+      }
+    },
+    {
+      "name": "spend_by_department",
+      "description": "Compare departments (forvaltning) on spend or invoice-line count, optionally within one account, supplier or month. This is the peer benchmark: one department against the others. Data: Umeå kommun supplier invoices 2025 summed per month (datum, YYYYMM), department (forvaltning), supplier (leverantor) and account text (konto_text). belopp is SEK excluding VAT; antal_rader is the number of invoice lines. Use agg='sum' for totals: 'mean' and 'median' describe month-department-supplier-account cells, not invoices. The 'rows' in the result are cells, so sum antal_rader to count invoice lines.",
+      "operation": "aggregate",
+      "dataset_id": "umea-spend-cube-2025",
+      "params": {
+        "group": "forvaltning",
+        "metrics": [
+          "belopp",
+          "antal_rader"
+        ],
+        "filterable": [
+          "konto_text",
+          "leverantor",
+          "datum"
+        ],
+        "eval_filters": {
+          "konto_text": "Livsmedel"
+        },
+        "eval_args": {
+          "agg": "sum"
+        },
+        "eval_question": "Which department spent the most on food (Livsmedel) in 2025?"
+      }
+    },
+    {
+      "name": "spend_by_month",
+      "description": "Monthly spend or invoice-line count for 2025 (group = datum, YYYYMM), optionally within one department, account or supplier. Results are sorted by value, not by month. Data: Umeå kommun supplier invoices 2025 summed per month (datum, YYYYMM), department (forvaltning), supplier (leverantor) and account text (konto_text). belopp is SEK excluding VAT; antal_rader is the number of invoice lines. Use agg='sum' for totals: 'mean' and 'median' describe month-department-supplier-account cells, not invoices. The 'rows' in the result are cells, so sum antal_rader to count invoice lines.",
+      "operation": "aggregate",
+      "dataset_id": "umea-spend-cube-2025",
+      "params": {
+        "group": "datum",
+        "metrics": [
+          "belopp",
+          "antal_rader"
+        ],
+        "filterable": [
+          "forvaltning",
+          "konto_text",
+          "leverantor"
+        ],
+        "eval_filters": {
+          "konto_text": "Lokalhyra"
+        },
+        "eval_args": {
+          "agg": "sum"
+        },
+        "eval_question": "In which month of 2025 was rent (Lokalhyra) spend highest?"
+      }
+    },
+    {
+      "name": "invoice_size_by_account",
+      "description": "Invoice-line size benchmark per account (konto_text): median, mean, min, max, sum or count of belopp, optionally within one department. Compare median with mean to show skew, and report the 'rows' behind each figure. Data: individual supplier invoice lines of Umeå kommun for September 2025 only. belopp is SEK excluding VAT per line; negative values are credits.",
+      "operation": "aggregate",
+      "dataset_id": "umea-invoices-2025-09",
+      "params": {
+        "group": "konto_text",
+        "metrics": [
+          "belopp"
+        ],
+        "filterable": [
+          "forvaltning"
+        ],
+        "eval_filters": {
+          "forvaltning": "Äldrenämnd"
+        },
+        "eval_args": {
+          "agg": "median"
+        },
+        "eval_question": "Which account has the highest median invoice line in Äldrenämnd in September 2025?"
+      }
+    },
+    {
+      "name": "find_invoice_lines",
+      "description": "List individual invoice lines, filtered by department, account or supplier and sorted by any returned column (for example the largest lines by belopp). Use it to show the evidence behind a figure. Data: individual supplier invoice lines of Umeå kommun for September 2025 only. belopp is SEK excluding VAT per line; negative values are credits.",
+      "operation": "filter_rows",
+      "dataset_id": "umea-invoices-2025-09",
+      "params": {
+        "columns": [
+          "forvaltning",
+          "leverantor",
+          "konto_text",
+          "belopp",
+          "verifikationsnummer"
+        ],
+        "filterable": [
+          "forvaltning",
+          "konto_text",
+          "leverantor"
+        ],
+        "eval_filters": {
+          "konto_text": "Livsmedel"
+        },
+        "eval_question": "How many food (Livsmedel) invoice lines are there in September 2025?"
+      }
+    }
+  ],
+  "example_questions": [
+    "Which accounts did Umeå kommun spend the most on in 2025, and how many invoice lines are behind each figure?",
+    "For food (Livsmedel), which suppliers got the most spend in 2025, and what share did the largest one have?",
+    "How does food (Livsmedel) spend compare across departments in 2025?",
+    "How did rent (Lokalhyra) spend develop month by month in 2025?"
+  ],
+  "show_developer_tabs": false,
+  "about_file": "docs/about.md"
+}
